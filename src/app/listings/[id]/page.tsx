@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArrowRight, Calendar, MapPin, Sparkles, Waves } from "lucide-react";
@@ -11,11 +11,13 @@ import { properties } from "@/data/properties";
 import { formatCurrency } from "@/lib/utils";
 
 type PropertyPageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-export function generateMetadata({ params }: PropertyPageProps): Metadata {
-  const property = properties.find((item) => item.id === params.id);
+export async function generateMetadata({ params }: PropertyPageProps): Promise<Metadata> {
+  const { id } = await params;
+
+  const property = properties.find((item) => item.id === id);
 
   if (!property) {
     return {
@@ -24,7 +26,7 @@ export function generateMetadata({ params }: PropertyPageProps): Metadata {
   }
 
   return {
-    title: `${property.title} · ${property.location}`,
+    title: `${property.title} - ${property.location}`,
     description: property.description,
     openGraph: {
       title: property.title,
@@ -35,14 +37,16 @@ export function generateMetadata({ params }: PropertyPageProps): Metadata {
   };
 }
 
-export default function PropertyDetailsPage({ params }: PropertyPageProps) {
-  const property = properties.find((item) => item.id === params.id);
+export default async function PropertyDetailsPage({ params }: PropertyPageProps) {
+  const { id } = await params;
+
+  const property = properties.find((item) => item.id === id);
 
   if (!property) {
     notFound();
   }
 
-  const { title, location, price, bedrooms, bathrooms, area, description, features, images, type } = property!;
+  const { title, location, price, bedrooms, bathrooms, area, description, features, images, type } = property;
 
   return (
     <div className="container space-y-14 py-16">
@@ -94,7 +98,7 @@ export default function PropertyDetailsPage({ params }: PropertyPageProps) {
             <div className="rounded-2xl border border-primary/15 bg-primary/10 p-4 text-sm text-primary dark:border-primary/25">
               <p className="text-xs uppercase tracking-[0.45em]">Blueprint</p>
               <p className="mt-2 text-base font-semibold text-primary/90">
-                {bedrooms} suite{bedrooms > 1 ? "s" : ""} · {bathrooms} bath{bathrooms > 1 ? "s" : ""}
+                {bedrooms} suite{bedrooms > 1 ? "s" : ""} | {bathrooms} bath{bathrooms > 1 ? "s" : ""}
               </p>
               <p className="text-xs text-primary/70">{area.toLocaleString()} sqft of indoor-outdoor flow</p>
             </div>

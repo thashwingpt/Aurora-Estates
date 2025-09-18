@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { Route } from "next";
+import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -32,9 +33,10 @@ const pricePresets = [
   { label: "$2M+", min: "2000000", max: "" }
 ];
 
+const LISTINGS_ROUTE: Route = "/listings";
+
 export function FilterSidebar({ locations, propertyTypes }: FilterSidebarProps) {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const serializedParams = searchParams.toString();
 
@@ -67,10 +69,12 @@ export function FilterSidebar({ locations, propertyTypes }: FilterSidebarProps) 
           params.set(key, value);
         }
       });
+
       const queryString = params.toString();
-      router.push(queryString ? `${pathname}?${queryString}` : pathname);
+      const target = queryString ? (`/listings?${queryString}` as Route) : LISTINGS_ROUTE;
+      router.push(target);
     },
-    [pathname, router]
+    [router]
   );
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -80,7 +84,7 @@ export function FilterSidebar({ locations, propertyTypes }: FilterSidebarProps) 
 
   const handleReset = () => {
     setFilters(defaultState);
-    router.push(pathname);
+    router.push(LISTINGS_ROUTE);
   };
 
   const handlePricePreset = (min: string, max: string) => {

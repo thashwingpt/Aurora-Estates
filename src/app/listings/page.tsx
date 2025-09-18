@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 import { FilterSidebar } from "@/components/filter-sidebar";
 import { PropertyCard } from "@/components/property-card";
@@ -6,7 +6,12 @@ import { properties } from "@/data/properties";
 import { formatCurrency } from "@/lib/utils";
 
 type ListingsPageProps = {
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+type FilterHref = {
+  pathname: "/listings";
+  query?: Record<string, string>;
 };
 
 function parseParam(value: string | string[] | undefined) {
@@ -14,25 +19,31 @@ function parseParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function createFilterLink(searchParams: Record<string, string | string[] | undefined>, key: string) {
-  const params = new URLSearchParams();
-  Object.entries(searchParams).forEach(([paramKey, paramValue]) => {
-    if (!paramValue) return;
-    const normalizedValue = Array.isArray(paramValue) ? paramValue[0] : paramValue;
-    if (paramKey === key) return;
-    if (normalizedValue) {
-      params.set(paramKey, normalizedValue);
+function createFilterLink(searchParams: Record<string, string | string[] | undefined>, key: string): FilterHref {
+  const query = Object.entries(searchParams).reduce<Record<string, string>>((acc, [paramKey, paramValue]) => {
+    if (!paramValue || paramKey === key) {
+      return acc;
     }
-  });
-  return params.toString() ? `/listings?${params.toString()}` : "/listings";
+
+    const normalizedValue = Array.isArray(paramValue) ? paramValue[0] : paramValue;
+    if (normalizedValue) {
+      acc[paramKey] = normalizedValue;
+    }
+
+    return acc;
+  }, {});
+
+  return Object.keys(query).length ? { pathname: "/listings", query } : { pathname: "/listings" };
 }
 
-export default function ListingsPage({ searchParams }: ListingsPageProps) {
+export default async function ListingsPage({ searchParams }: ListingsPageProps) {
+  const resolvedSearchParams = (await searchParams) ?? {};
+
   const filters = {
-    location: parseParam(searchParams.location),
-    type: parseParam(searchParams.type),
-    minPrice: parseParam(searchParams.minPrice),
-    maxPrice: parseParam(searchParams.maxPrice)
+    location: parseParam(resolvedSearchParams.location),
+    type: parseParam(resolvedSearchParams.type),
+    minPrice: parseParam(resolvedSearchParams.minPrice),
+    maxPrice: parseParam(resolvedSearchParams.maxPrice)
   };
 
   const locations = Array.from(new Set(properties.map((property) => property.location))).sort();
@@ -46,24 +57,26 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
     return matchesLocation && matchesType && matchesMinPrice && matchesMaxPrice;
   });
 
-  const activeFilters = [
-    filters.location && {
-      label: filters.location,
-      href: createFilterLink(searchParams, "location")
-    },
-    filters.type && {
-      label: filters.type,
-      href: createFilterLink(searchParams, "type")
-    },
-    filters.minPrice && {
+  const activeFilters: Array<{ label: string; href: FilterHref }> = [];
+
+  if (filters.location) {
+    activeFilters.push({ label: filters.location, href: createFilterLink(resolvedSearchParams, "location") });
+  }
+  if (filters.type) {
+    activeFilters.push({ label: filters.type, href: createFilterLink(resolvedSearchParams, "type") });
+  }
+  if (filters.minPrice) {
+    activeFilters.push({
       label: `Min ${formatCurrency(Number(filters.minPrice))}`,
-      href: createFilterLink(searchParams, "minPrice")
-    },
-    filters.maxPrice && {
+      href: createFilterLink(resolvedSearchParams, "minPrice")
+    });
+  }
+  if (filters.maxPrice) {
+    activeFilters.push({
       label: `Max ${formatCurrency(Number(filters.maxPrice))}`,
-      href: createFilterLink(searchParams, "maxPrice")
-    }
-  ].filter(Boolean) as { label: string; href: string }[];
+      href: createFilterLink(resolvedSearchParams, "maxPrice")
+    });
+  }
 
   const resultsLabel = filteredProperties.length === 1 ? "residence" : "residences";
 
@@ -86,7 +99,7 @@ export default function ListingsPage({ searchParams }: ListingsPageProps) {
               {activeFilters.map((filter) => (
                 <Link key={filter.label} href={filter.href} className="filter-chip">
                   {filter.label}
-                  <span className="text-xs uppercase text-primary">×</span>
+                  <span className="text-xs uppercase text-primary">x</span>
                 </Link>
               ))}
             </div>

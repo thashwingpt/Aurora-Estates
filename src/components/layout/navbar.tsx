@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -11,7 +12,7 @@ const links = [
   { href: "/", label: "Home" },
   { href: "/listings", label: "Listings" },
   { href: "/contact", label: "Contact" }
-];
+] satisfies Array<{ href: Route; label: string }>;
 
 export function Navbar() {
   const pathname = usePathname();
@@ -26,7 +27,7 @@ export function Navbar() {
           </span>
           <div className="flex flex-col">
             <span className="font-display text-xl text-foreground">Aurora Estates Collective</span>
-            <span className="text-xs uppercase tracking-[0.45em] text-muted-foreground">Private residences · Global concierge</span>
+            <span className="text-xs uppercase tracking-[0.45em] text-muted-foreground">Private residences - Global concierge</span>
           </div>
         </Link>
         <nav className="hidden items-center gap-1 text-sm font-medium md:flex">
