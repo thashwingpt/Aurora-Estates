@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -49,13 +49,15 @@
 }
 
 * {
-  @apply border-border;
+  border-color: hsl(var(--border));
 }
 
 body {
   @apply bg-background text-foreground min-h-screen antialiased;
   font-family: var(--font-sans);
-  background-image: theme("backgroundImage.aurora");
+  background-image: radial-gradient(120% 120% at 0% 0%, rgba(59,130,246,0.28) 0%, rgba(59,130,246,0) 70%),
+    radial-gradient(120% 120% at 100% 0%, rgba(56,189,248,0.3) 0%, rgba(125,211,252,0) 70%),
+    radial-gradient(140% 140% at 50% 100%, rgba(147,51,234,0.25) 0%, rgba(147,51,234,0) 70%);
   background-attachment: fixed;
   background-size: cover;
   position: relative;
